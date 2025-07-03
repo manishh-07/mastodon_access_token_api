@@ -9,4 +9,3 @@ class TokenResponse(BaseModel):
     token_type: str
     scope: str
     created_at: int
-

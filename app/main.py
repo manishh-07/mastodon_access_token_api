@@ -5,9 +5,8 @@ from app.service import generate_access_token
 app = FastAPI()
 
 @app.post("/generate-token", response_model=TokenResponse)
-def get_token(data: TokenRequest):
+def generate_token(payload: TokenRequest):
     try:
-        token_data = generate_access_token(data.username, data.password)
-        return token_data
+        return generate_access_token(payload.email, payload.password)
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))

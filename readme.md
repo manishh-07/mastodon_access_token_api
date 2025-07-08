@@ -148,29 +148,33 @@ curl -X POST http://127.0.0.1:8000/forgot-password \
   -H "Content-Type: application/json" \
   -d '{"email": "demo@tempmail.com", "new_password": "root1234"}'
 ```
+---
 
+## ⚠️ WARNING: Invalid Client / Token Request Failure
+
+### If you see this error:
+```bash
+{    "error": "invalid_client",    "error_description": "Client authentication failed due to unknown client, no client authentication included, or unsupported authentication method."  }
 ```
 
-⚠️ WARNING: Invalid Client / Token Request Failure
---------------------------------------------------
-
-If you see this error:
-
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   jsonCopyEdit{    "error": "invalid_client",    "error_description": "Client authentication failed due to unknown client, no client authentication included, or unsupported authentication method."  }   `
-
 ### 🔍 Cause:
-
-*   This happens when .env is updated but your FastAPI server is **still using old environment values**.
-    
+```bash
+*   This happens when .env is updated but your FastAPI server is still using old environment values.
+```
 
 ### ✅ Solution:
+```bash
 
-1.  **Update your .env** file with new MASTODON\_CLIENT\_ID and MASTODON\_CLIENT\_SECRET.
-    
-2.  Then **fully restart your FastAPI server**, not just --reload:
-    
+1.  Update your.env file with new MASTODON\_CLIENT\_ID and MASTODON\_CLIENT\_SECRET.
+```
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   bashCopyEdit# Kill existing  CTRL+C  # Restart the server  uvicorn app.main:app --reload   `
+```bash
+2.  Then fully restart your FastAPI server not just --reload:
+```
+
+ ```bash
+   3. Kill existing  CTRL+C  # Restart the server  uvicorn app.main:app --reload   `
+```
 
 This ensures environment values are reloaded cleanly.
 

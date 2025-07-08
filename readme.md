@@ -1,9 +1,7 @@
 
-# 🚀 Mastodon Token Service (FastAPI)
+# 🚀 Mastodon Token & Password Management via FastAPI
 
-This service creates or logs in Mastodon users, sets passwords (inside Dockerized Mastodon), and returns an access token using the `password` grant.
-
----
+This project provides **three fully automated FastAPI endpoints** to interact with a self-hosted Mastodon instance running in Docker.
 
 ## 📁 Project Structure
 
@@ -18,101 +16,143 @@ This service creates or logs in Mastodon users, sets passwords (inside Dockerize
 └── README.txt               # This file
 ```
 
+
 ---
 
-## 🔧 Prerequisites
+## 📦 Endpoints Summary
 
-- Mastodon installed inside Docker at `/opt/mastodon`
-- This FastAPI service running separately (e.g., `/home/cepl/Desktop/mastodon_token_service/`)
-- Mastodon web container name: `mastodon_web_1`
-- A pre-registered OAuth app in Mastodon using:
-  ```bash
-  docker exec -it mastodon_web_1 bash -c "RAILS_ENV=production bin/tootctl apps create 'MyFastAPIApp' --redirect-uri urn:ietf:wg:oauth:2.0:oob --scopes 'read write follow'"
+| Endpoint            | Description                            | Auth Required |
+|---------------------|----------------------------------------|---------------|
+| `/generate-token`   | Auto-creates a Mastodon user (if needed), sets password, and returns an access token using the password grant | ❌ No |
+| `/change-password`  | Changes the password of a Mastodon user after validating old password | ✅ Yes |
+| `/forgot-password`  | Resets a user's password without login (unauthenticated flow) | ❌ No |
+
+---
+
+## ⚙️ Internals – What Happens Under the Hood?
+
+### 1. 🔑 `/generate-token`
+
+- Extracts `username` from email (sanitizing special characters)
+- Runs inside Mastodon container:
+  - `bin/tootctl accounts create ...`
+  - If already exists: skips
+- Then sets password:
+  ```ruby
+  user = Account.find_by(username: '<username>').user
+  user.password = '<password>'
+  user.save!
+  ```
+- Then uses `client_id` and `client_secret` with:
+  ```http
+  POST /oauth/token
+  grant_type=password
   ```
 
+---
+
+### 2. 🔁 `/change-password`
+
+- Verifies identity using:
+  ```http
+  POST /oauth/token
+  grant_type=password
+  ```
+- Then inside container:
+  ```ruby
+  user = Account.find_by(username: '<username>').user
+  user.password = '<new_password>'
+  user.save!
+  ```
 
 ---
 
-## ✅ Main API Usage
+### 3. 🧠 `/forgot-password`
 
-### ➤ `POST /generate-token`
+- Verifies user existence via:
+  ```ruby
+  puts User.find_by(email: '<email>').present?
+  ```
+- Resets password directly using:
+  ```ruby
+  user = Account.find_by(username: '<username>').user
+  user.skip_confirmation!
+  user.password = '<new_password>'
+  user.save!
+  ```
 
-Creates Mastodon account if not exists, sets password, returns token.
+---
 
-**Request JSON:**
-```json
-{
-  "email": "giwison160@axcradio.com",
-  "password": "mani1234"
-}
+## 🔐 Mastodon Setup Notes (One-Time)
+
+1. Enter Mastodon container:
+```bash
+docker exec -it mastodon_web_1 bash
 ```
 
-**cURL:**
+2. Generate credentials:
+```bash
+RAILS_ENV=production bin/tootctl applications create MyFastAPIApp \
+  --redirect-uri=urn:ietf:wg:oauth:2.0:oob \
+  --scopes="read write follow"
+```
+
+3. Save the `client_id` and `client_secret` in your `.env`.
+
+---
+
+## 📁 .env Example (Safe for Production)
+
+```env
+MASTODON_INSTANCE=https://mastodon.yourdomain.com
+CLIENT_NAME=MyFastAPIApp
+SCOPES=read write follow
+
+MASTODON_DOCKER=mastodon_web_1
+MASTODON_CLIENT_ID=...
+MASTODON_CLIENT_SECRET=...
+```
+
+---
+
+## 🐳 Docker Compatibility
+
+Make sure both **FastAPI container** and **Mastodon containers** are on the **same network**:
+```yaml
+networks:
+  mastodon:
+    driver: bridge
+```
+
+---
+
+## 🧪 Testing Reference (Postman / Curl)
+
+### ✅ Generate Token
 ```bash
 curl -X POST http://127.0.0.1:8000/generate-token \
   -H "Content-Type: application/json" \
-  -d '{"email": "giwison160@axcradio.com", "password": "mani1234"}'
+  -d '{"email": "demo@tempmail.com", "password": "mani1234"}'
 ```
 
-**Response JSON:**
-```json
-{
-  "email": "giwison160@axcradio.com",
-  "username": "giwison160",
-  "access_token": "...",
-  "token_type": "Bearer",
-  "scope": "read write follow",
-  "created_at": 1751000000
-}
-```
-
----
-
-## 🧪 Manual OAuth Token Testing
-
-If needed, use the same logic manually against Mastodon:
-
+### 🔁 Change Password
 ```bash
-curl -X POST http://localhost:3000/oauth/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password" \
-  -d "client_id=-------------" \
-  -d "client_secret=---------------" \
-  -d "username=giwison160@axcradio.com" \
-  -d "password=mani1234" \
-  -d "scope=read write follow"
+curl -X POST http://127.0.0.1:8000/change-password \
+  -H "Content-Type: application/json" \
+  -d '{"email": "demo@tempmail.com", "old_password": "mani1234", "new_password": "newsecure123"}'
 ```
 
----
-
-## 💡 Notes
-
-- Mastodon username = sanitized email before `@` (e.g., `"giwison160@axcradio.com"` → `giwison160`)
-- Password must be at least **8 characters**
-- `redirect_uri` must match `urn:ietf:wg:oauth:2.0:oob` (important!)
-- `/generate-token` works on both new & existing users
-- All token requests rely on fixed `client_id` and `client_secret` from `.env`
-
----
-
-## 🧼 Debug/Check Commands
-
-Check if Mastodon user exists:
-
+### 🧠 Forgot Password
 ```bash
-docker exec -it mastodon_web_1 bash -c "RAILS_ENV=production bin/rails c"
-```
-
-Then in Rails console:
-```ruby
-Account.exists?(username: "giwison160")
-User.find_by(email: "giwison160@axcradio.com")
+curl -X POST http://127.0.0.1:8000/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email": "demo@tempmail.com", "new_password": "root1234"}'
 ```
 
 ---
 
-## 📅 Generated On
+## 📅 Last Updated
 
-2025-07-07 05:57:59 UTC
+2025-07-08 05:58:08
 
 ---

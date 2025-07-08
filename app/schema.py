@@ -12,3 +12,11 @@ class TokenResponse(BaseModel):
     scope: str
     created_at: int
 
+class PasswordChangeRequest(BaseModel):
+    email: str
+    old_password: str
+    new_password: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+    new_password: str

@@ -6,7 +6,8 @@ from app.schema import (
 from app.service import (
     generate_access_token, change_password, forgot_password
 )
-from app.utils import register_oauth_app_once  # 👈 NEW FUNCTION
+
+from app.utils import register_oauth_app_once
 
 app = FastAPI()
 

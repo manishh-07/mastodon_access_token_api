@@ -48,6 +48,7 @@ def create_mastodon_account(username: str, email: str, password: str):
         f"user = Account.find_by(username: '{username}').user;"
         f"user.password = '{password}';"
         f"user.password_confirmation = '{password}';"
+        f"user.approved = true;"
         f"user.save!"
     )
     safe_ruby = ruby.replace("'", "'\\''")

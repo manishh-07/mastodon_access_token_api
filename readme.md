@@ -104,13 +104,16 @@ RAILS_ENV=production bin/tootctl applications create MyFastAPIApp \
 ## 📁 .env Example (Safe for Production)
 
 ```env
-MASTODON_INSTANCE=https://mastodon.yourdomain.com
-CLIENT_NAME=MyFastAPIApp
-SCOPES=read write follow
+# For Running Ngrok server 
 
+# ngrok start --all --config ~/.ngrok2/ngrok.yml
+
+CLIENT_NAME=MyNgrokApp
+SCOPES=read write follow
 MASTODON_DOCKER=mastodon_web_1
-MASTODON_CLIENT_ID=...
-MASTODON_CLIENT_SECRET=...
+MASTODON_INSTANCE=https://0b44d52cd.ngrok-free.app
+MASTODON_CLIENT_ID=GpQ6Pzm9Tlfkz2_RP1zQLWnYxiQpoqRCM
+MASTODON_CLIENT_SECRET=0VKES7HvIZRSL-ttaY7LboHqwgnNW_gS228oaqVM
 ```
 
 ---
@@ -179,6 +182,10 @@ curl -X POST http://127.0.0.1:8000/forgot-password \
 This ensures environment values are reloaded cleanly.
 
 ---
+
+uvicorn app.main:app --reload
+
+```
 
 ## 📅 Last Updated
 

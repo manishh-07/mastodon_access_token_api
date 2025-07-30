@@ -12,10 +12,10 @@ def register_oauth_app_once():
     register_url = f"{MASTODON_INSTANCE}/api/v1/apps"
     response = requests.post(register_url, data={
         "client_name": CLIENT_NAME,
-        "redirect_uris": "urn:ietf:wg:oauth:2.0:oob",
+        "redirect_uris": "https://99138a0ecaf4.ngrok-free.app/callback",  # <-- ✅ use ngrok FastAPI URL
         "scopes": SCOPES,
         "website": "http://localhost"
-    })
+})
 
     if response.status_code != 200:
         raise Exception(f"OAuth registration failed: {response.status_code} {response.text}")
@@ -29,3 +29,4 @@ def register_oauth_app_once():
     with open(".env", "a") as f:
         f.write(f"\nMASTODON_CLIENT_ID={data['client_id']}")
         f.write(f"\nMASTODON_CLIENT_SECRET={data['client_secret']}")
+

@@ -1,5 +1,5 @@
 
-# 🚀 Mastodon's Account Creation, Access Token & Password Management via FastAPI
+# 🚀 Mastodon's Account Creation, Access Token & Password Management via FastAPI (Debugging Branch)
 
 This project provides **three fully automated FastAPI endpoints** to interact with a self-hosted Mastodon instance running in Docker.
 
@@ -131,6 +131,7 @@ networks:
 
 ## 🧪 Testing Reference (Postman / Curl)
 
+### Check endpoints carefully
 ### ✅ Generate Token
 ```bash
 curl -X POST http://127.0.0.1:8000/generate-token \
